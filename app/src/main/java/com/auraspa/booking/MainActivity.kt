@@ -761,7 +761,7 @@ fun DialogoPinAdmin(onDismiss: () -> Unit, onPinCorrecto: () -> Unit) {
         title = { Text("Acceso Administrador") },
         text = {
             Column {
-                Text("Ingresa el PIN de Mérida Beauty (por defecto: 1234)", fontSize = 13.sp, color = Color.Gray)
+                Text("Ingresa el PIN de Mérida Beauty (por defecto: 124578)", fontSize = 13.sp, color = Color.Gray)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = pin,
@@ -780,7 +780,7 @@ fun DialogoPinAdmin(onDismiss: () -> Unit, onPinCorrecto: () -> Unit) {
         },
         confirmButton = {
             Button(onClick = {
-                if (pin == "1234") onPinCorrecto() else error = true
+                if (pin == "124578") onPinCorrecto() else error = true
             }) { Text("Entrar") }
         },
         dismissButton = {
