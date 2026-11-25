@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,18 +15,22 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,6 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+// Colores oficiales de Mérida Beauty
+val MeridaPink = Color(0xFFE94E89)
+val MeridaPinkLight = Color(0xFFFCE4EC)
+val MeridaBackground = Color(0xFFFFF5F8)
+val MeridaGold = Color(0xFFD4AF37)
 
 data class ServicioSpa(
     val id: Int,
@@ -72,15 +84,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val spaColors = lightColorScheme(
-                primary = Color(0xFF5A7D7C),
+            val meridaColors = lightColorScheme(
+                primary = MeridaPink,
                 onPrimary = Color.White,
-                primaryContainer = Color(0xFFDCE8E7),
-                surface = Color(0xFFFAF8F5),
-                background = Color(0xFFFAF8F5)
+                primaryContainer = MeridaPinkLight,
+                secondary = MeridaGold,
+                surface = MeridaBackground,
+                background = MeridaBackground
             )
-            MaterialTheme(colorScheme = spaColors) {
-                Surface(modifier = Modifier.fillMaxSize()) {
+            MaterialTheme(colorScheme = meridaColors) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MeridaBackground) {
                     SpaBookingScreen()
                 }
             }
@@ -103,7 +116,8 @@ fun SpaBookingScreen() {
     val horariosBase = listOf("09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM", "03:30 PM", "05:00 PM")
     val proximosDias = remember { (0..13).map { normalizarDia(it) } }
 
-    var pasoActual by remember { mutableIntStateOf(1) }
+    // Paso 0 = Pantalla de presentación con el Avatar
+    var pasoActual by remember { mutableIntStateOf(0) }
     var servicioSeleccionado by remember { mutableStateOf<ServicioSpa?>(null) }
     var fechaSeleccionada by remember { mutableStateOf(proximosDias.first()) }
     var horaSeleccionada by remember { mutableStateOf<String?>(null) }
@@ -112,18 +126,36 @@ fun SpaBookingScreen() {
 
     val citasConfirmadas = remember { mutableStateListOf<CitaAgendada>() }
 
+    // Si estamos en el Paso 0, mostramos la pantalla completa de bienvenida sin barra superior
+    if (pasoActual == 0) {
+        PantallaBienvenidaAvatar(onComenzar = { pasoActual = 1 })
+        return
+    }
+
     Scaffold(
+        containerColor = MeridaBackground,
         topBar = {
             CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.White
+                ),
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Spa,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_merida),
+                            contentDescription = "Logo Mérida Beauty",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .border(1.5.dp, MeridaGold, CircleShape)
                         )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Aura Spa & Bienestar", fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "Mérida Beauty",
+                            fontWeight = FontWeight.Bold,
+                            color = MeridaPink
+                        )
                     }
                 }
             )
@@ -135,14 +167,15 @@ fun SpaBookingScreen() {
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            if (pasoActual < 4) {
+            Spacer(Modifier.height(12.dp))
+            if (pasoActual in 1..3) {
                 BarraProgresoDidactica(pasoActual)
                 Spacer(Modifier.height(16.dp))
             }
 
             when (pasoActual) {
                 1 -> {
-                    Text("1. ¿Qué tratamiento deseas hoy?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("1. ¿Qué tratamiento deseas hoy?", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF333333))
                     Text("Toca una tarjeta para continuar", fontSize = 14.sp, color = Color.Gray)
                     Spacer(Modifier.height(12.dp))
 
@@ -156,6 +189,7 @@ fun SpaBookingScreen() {
                                         pasoActual = 2
                                     },
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, MeridaPinkLight),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                                 shape = RoundedCornerShape(16.dp)
                             ) {
@@ -173,7 +207,7 @@ fun SpaBookingScreen() {
                                                 Icons.Default.Schedule,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(16.dp),
-                                                tint = MaterialTheme.colorScheme.primary
+                                                tint = MeridaGold
                                             )
                                             Text(
                                                 " ${servicio.duracionMin} min",
@@ -183,14 +217,15 @@ fun SpaBookingScreen() {
                                         }
                                     }
                                     Surface(
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        shape = RoundedCornerShape(12.dp)
+                                        color = MeridaPinkLight,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(1.dp, MeridaGold)
                                     ) {
                                         Text(
                                             text = servicio.precio,
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = MeridaPink
                                         )
                                     }
                                 }
@@ -205,7 +240,8 @@ fun SpaBookingScreen() {
                     Text(
                         "Servicio: ${servicioSeleccionado?.nombre ?: ""}",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MeridaPink,
+                        fontWeight = FontWeight.Medium
                     )
                     Spacer(Modifier.height(16.dp))
 
@@ -228,11 +264,11 @@ fun SpaBookingScreen() {
                                         horaSeleccionada = null
                                     },
                                 colors = CardDefaults.cardColors(
-                                    containerColor = if (esSeleccionado) MaterialTheme.colorScheme.primary else Color.White
+                                    containerColor = if (esSeleccionado) MeridaPink else Color.White
                                 ),
                                 border = BorderStroke(
                                     1.dp,
-                                    if (esSeleccionado) MaterialTheme.colorScheme.primary else Color.LightGray
+                                    if (esSeleccionado) MeridaGold else MeridaPinkLight
                                 )
                             ) {
                                 Column(
@@ -279,8 +315,9 @@ fun SpaBookingScreen() {
                                 onClick = { horaSeleccionada = hora },
                                 enabled = !ocupada,
                                 shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, if (seleccionada) MeridaGold else MeridaPinkLight),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = if (seleccionada) MaterialTheme.colorScheme.primary else Color.White,
+                                    containerColor = if (seleccionada) MeridaPink else Color.White,
                                     contentColor = if (seleccionada) Color.White else Color.Black
                                 ),
                                 modifier = Modifier.height(48.dp)
@@ -313,15 +350,14 @@ fun SpaBookingScreen() {
                     Spacer(Modifier.height(12.dp))
 
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = BorderStroke(1.5.dp, MeridaGold),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Resumen de tu cita:", fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                "• Tratamiento: ${servicioSeleccionado?.nombre ?: ""} (${servicioSeleccionado?.precio ?: ""})"
-                            )
+                            Text("Resumen de tu cita en Mérida Beauty:", fontWeight = FontWeight.Bold, color = MeridaPink)
+                            Spacer(Modifier.height(6.dp))
+                            Text("• Tratamiento: ${servicioSeleccionado?.nombre ?: ""} (${servicioSeleccionado?.precio ?: ""})")
                             Text("• Fecha: ${formatearFechaVisible(fechaSeleccionada)}")
                             Text("• Hora: ${horaSeleccionada ?: ""}")
                         }
@@ -332,7 +368,7 @@ fun SpaBookingScreen() {
                         value = nombreCliente,
                         onValueChange = { nombreCliente = it },
                         label = { Text("Tu Nombre Completo") },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MeridaPink) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -390,14 +426,14 @@ fun SpaBookingScreen() {
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = Color(0xFF2E7D32),
+                            tint = MeridaPink,
                             modifier = Modifier.size(80.dp)
                         )
                         Spacer(Modifier.height(16.dp))
-                        Text("¡Cita Agendada con Éxito!", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Text("¡Cita Agendada con Éxito!", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MeridaPink)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Te esperamos el ${formatearFechaVisible(fechaSeleccionada)} a las ${horaSeleccionada ?: ""} para tu ${servicioSeleccionado?.nombre ?: ""}.",
+                            "Te esperamos en Mérida Beauty el ${formatearFechaVisible(fechaSeleccionada)} a las ${horaSeleccionada ?: ""} para tu ${servicioSeleccionado?.nombre ?: ""}.",
                             textAlign = TextAlign.Center,
                             color = Color.DarkGray
                         )
@@ -420,6 +456,79 @@ fun SpaBookingScreen() {
 }
 
 @Composable
+fun PantallaBienvenidaAvatar(onComenzar: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MeridaBackground)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Spacer(Modifier.height(8.dp))
+
+        // Tarjeta con la imagen del Avatar 3D
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(2.5.dp, MeridaGold),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.avatar_merida),
+                contentDescription = "Bienvenida Mérida Beauty",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Mensaje de presentación del Avatar
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, MeridaPinkLight),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "¡Bienvenida a Mérida Beauty!",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MeridaPink,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Estoy aquí para ayudarte a reservar tu momento de relajación y belleza en pocos pasos.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(20.dp))
+                Button(
+                    onClick = onComenzar,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Text("Agendar mi cita", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.ArrowForward, contentDescription = null)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun BarraProgresoDidactica(pasoActual: Int) {
     val pasos = listOf("1. Servicio", "2. Fecha/Hora", "3. Confirmar")
     Row(
@@ -435,7 +544,7 @@ fun BarraProgresoDidactica(pasoActual: Int) {
                         .fillMaxWidth()
                         .height(6.dp)
                         .background(
-                            color = if (activo) MaterialTheme.colorScheme.primary else Color.LightGray,
+                            color = if (activo) MeridaPink else MeridaPinkLight,
                             shape = RoundedCornerShape(3.dp)
                         )
                 )
@@ -444,7 +553,7 @@ fun BarraProgresoDidactica(pasoActual: Int) {
                     text = titulo,
                     fontSize = 12.sp,
                     fontWeight = if (activo) FontWeight.Bold else FontWeight.Normal,
-                    color = if (activo) MaterialTheme.colorScheme.primary else Color.Gray
+                    color = if (activo) MeridaPink else Color.Gray
                 )
             }
         }
