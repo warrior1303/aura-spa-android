@@ -3,7 +3,9 @@
 
     <application
         android:allowBackup="true"
-        android:label="Aura Spa"
+        android:icon="@drawable/logo_merida"
+        android:roundIcon="@drawable/logo_merida"
+        android:label="Mérida Beauty"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
